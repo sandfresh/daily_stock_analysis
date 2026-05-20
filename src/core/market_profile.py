@@ -3,7 +3,7 @@
 大盘复盘市场区域配置
 
 定义各市场区域的指数、新闻搜索词、Prompt 提示等元数据，
-供 MarketAnalyzer 按 region 切换 A 股/美股复盘行为。
+供 MarketAnalyzer 按 region 切换 A 股/美股/港股/台股复盘行为。
 """
 
 from dataclasses import dataclass
@@ -14,8 +14,8 @@ from typing import List
 class MarketProfile:
     """大盘复盘市场区域配置"""
 
-    region: str  # "cn" | "us"
-    # 用于判断整体走势的指数代码，cn 用上证 000001，us 用标普 SPX
+    region: str  # "cn" | "us" | "hk" | "tw"
+    # 用于判断整体走势的指数代码，cn 用上证 000001，us 用标普 SPX，tw 用加权指数 TAIEX
     mood_index_code: str
     # 新闻搜索关键词
     news_queries: List[str]
@@ -66,6 +66,19 @@ HK_PROFILE = MarketProfile(
     has_sector_rankings=False,
 )
 
+TW_PROFILE = MarketProfile(
+    region="tw",
+    mood_index_code="TAIEX",
+    news_queries=[
+        "台灣股市 大盤 復盤",
+        "Taiwan stock market",
+        "加權指數 行情",
+    ],
+    prompt_index_hint="分析台灣加權指數、櫃檯指數、電子股等主要指標走勢特點",
+    has_market_stats=True,
+    has_sector_rankings=True,
+)
+
 
 def get_profile(region: str) -> MarketProfile:
     """根据 region 返回对应的 MarketProfile"""
@@ -73,4 +86,6 @@ def get_profile(region: str) -> MarketProfile:
         return US_PROFILE
     if region == "hk":
         return HK_PROFILE
+    if region == "tw":
+        return TW_PROFILE
     return CN_PROFILE
