@@ -316,6 +316,8 @@ class YfinanceFetcher(BaseFetcher):
             return self._get_us_main_indices(yf)
         if region == "hk":
             return self._get_hk_main_indices(yf)
+        if region == "tw":
+            return self._get_tw_main_indices(yf)
 
         # A 股指数：akshare 代码 -> (yfinance 代码, 显示名称)
         yf_mapping = {
@@ -403,6 +405,31 @@ class YfinanceFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"[Yfinance] 获取港股指数行情失败: {e}")
+
+        return None
+
+    def _get_tw_main_indices(self, yf) -> Optional[List[Dict[str, Any]]]:
+        """获取台股主要指数行情（Yahoo Finance）。"""
+        tw_indices = {
+            'TAIEX': ('^TWII', '台灣加權指數'),
+            'TAIROC': ('^TWOTC', '台灣櫃檯指數'),
+        }
+        results: List[Dict[str, Any]] = []
+        try:
+            for code, (yf_symbol, name) in tw_indices.items():
+                try:
+                    item = self._fetch_yf_ticker_data(yf, yf_symbol, name, code)
+                    if item:
+                        results.append(item)
+                        logger.debug(f"[Yfinance] 获取台股指数 {name} 成功")
+                except Exception as e:
+                    logger.warning(f"[Yfinance] 获取台股指数 {name} 失败: {e}")
+
+            if results:
+                logger.info(f"[Yfinance] 成功获取 {len(results)} 个台股指数行情")
+                return results
+        except Exception as e:
+            logger.error(f"[Yfinance] 获取台股指数行情失败: {e}")
 
         return None
 

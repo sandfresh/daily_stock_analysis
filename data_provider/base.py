@@ -1814,51 +1814,6 @@ class DataFetcherManager:
                         return data
                 except Exception as e:
                     logger.warning(f"[TickFlowFetcher] 获取指数行情失败: {e}")
-        if region == "tw":
-            return [
-                {
-                    "code": "TAIEX",
-                    "name": "台灣加權指數",
-                    "current": 0.0,
-                    "change": 0.0,
-                    "change_pct": 0.0,
-                    "open": 0.0,
-                    "high": 0.0,
-                    "low": 0.0,
-                    "prev_close": 0.0,
-                    "volume": 0.0,
-                    "amount": 0.0,
-                    "amplitude": 0.0,
-                },
-                {
-                    "code": "TAIROC",
-                    "name": "台灣櫃檯指數",
-                    "current": 0.0,
-                    "change": 0.0,
-                    "change_pct": 0.0,
-                    "open": 0.0,
-                    "high": 0.0,
-                    "low": 0.0,
-                    "prev_close": 0.0,
-                    "volume": 0.0,
-                    "amount": 0.0,
-                    "amplitude": 0.0,
-                },
-                {
-                    "code": "FINTECH",
-                    "name": "金融科技指數",
-                    "current": 0.0,
-                    "change": 0.0,
-                    "change_pct": 0.0,
-                    "open": 0.0,
-                    "high": 0.0,
-                    "low": 0.0,
-                    "prev_close": 0.0,
-                    "volume": 0.0,
-                    "amount": 0.0,
-                    "amplitude": 0.0,
-                },
-            ]
         for fetcher in self._fetchers:
             try:
                 data = fetcher.get_main_indices(region=region)
