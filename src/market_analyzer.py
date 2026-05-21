@@ -449,19 +449,19 @@ Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-
                     indices.append(index)
 
             if not indices:
-                logger.warning("[大盘] 所有行情数据源失败，将依赖新闻搜索进行分析")
+                logger.warning("[大盤] 所有行情数据源失败，将依赖新闻搜索进行分析")
             else:
-                logger.info(f"[大盘] 获取到 {len(indices)} 个指数行情")
+                logger.info(f"[大盤] 获取到 {len(indices)} 个指数行情")
 
         except Exception as e:
-            logger.error(f"[大盘] 获取指数行情失败: {e}")
+            logger.error(f"[大盤] 获取指数行情失败: {e}")
 
         return indices
 
     def _get_market_statistics(self, overview: MarketOverview):
         """获取市场涨跌统计"""
         try:
-            logger.info("[大盘] 获取市场涨跌统计...")
+            logger.info("[大盤] 获取市场涨跌统计...")
 
             stats = self.data_manager.get_market_stats()
 
@@ -473,17 +473,17 @@ Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-
                 overview.limit_down_count = stats.get('limit_down_count', 0)
                 overview.total_amount = stats.get('total_amount', 0.0)
 
-                logger.info(f"[大盘] 涨:{overview.up_count} 跌:{overview.down_count} 平:{overview.flat_count} "
+                logger.info(f"[大盤] 涨:{overview.up_count} 跌:{overview.down_count} 平:{overview.flat_count} "
                           f"涨停:{overview.limit_up_count} 跌停:{overview.limit_down_count} "
                           f"成交额:{overview.total_amount:.0f}亿")
 
         except Exception as e:
-            logger.error(f"[大盘] 获取涨跌统计失败: {e}")
+            logger.error(f"[大盤] 获取涨跌统计失败: {e}")
 
     def _get_sector_rankings(self, overview: MarketOverview):
         """获取板块涨跌榜"""
         try:
-            logger.info("[大盘] 获取板块涨跌榜...")
+            logger.info("[大盤] 获取板块涨跌榜...")
 
             top_sectors, bottom_sectors = self.data_manager.get_sector_rankings(5)
 
@@ -491,16 +491,16 @@ Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-
                 overview.top_sectors = top_sectors
                 overview.bottom_sectors = bottom_sectors
 
-                logger.info(f"[大盘] 领涨板块: {[s['name'] for s in overview.top_sectors]}")
-                logger.info(f"[大盘] 领跌板块: {[s['name'] for s in overview.bottom_sectors]}")
+                logger.info(f"[大盤] 領漲板塊: {[s['name'] for s in overview.top_sectors]}")
+                logger.info(f"[大盤] 領跌板塊: {[s['name'] for s in overview.bottom_sectors]}")
 
         except Exception as e:
-            logger.error(f"[大盘] 获取板块涨跌榜失败: {e}")
+            logger.error(f"[大盤] 获取板块涨跌榜失败: {e}")
     
     # def _get_north_flow(self, overview: MarketOverview):
     #     """获取北向资金流入"""
     #     try:
-    #         logger.info("[大盘] 获取北向资金...")
+    #         logger.info("[大盤] 获取北向资金...")
     #         
     #         # 获取北向资金数据
     #         df = ak.stock_hsgt_north_net_flow_in_em(symbol="北上")
@@ -513,10 +513,10 @@ Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-
     #             elif '净流入' in df.columns:
     #                 overview.north_flow = float(latest['净流入']) / 1e8
     #                 
-    #             logger.info(f"[大盘] 北向资金净流入: {overview.north_flow:.2f}亿")
+    #             logger.info(f"[大盤] 北向资金净流入: {overview.north_flow:.2f}亿")
     #             
     #     except Exception as e:
-    #         logger.warning(f"[大盘] 获取北向资金失败: {e}")
+    #         logger.warning(f"[大盤] 获取北向资金失败: {e}")
     
     def search_market_news(self) -> List[Dict]:
         """
@@ -526,7 +526,7 @@ Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-
             新闻列表
         """
         if not self.search_service:
-            logger.warning("[大盘] 搜索服务未配置，跳过新闻搜索")
+            logger.warning("[大盤] 搜索服务未配置，跳过新闻搜索")
             return []
         
         all_news = []
@@ -535,7 +535,7 @@ Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-
         search_queries = self.profile.news_queries
         
         try:
-            logger.info("[大盘] 开始搜索市场新闻...")
+            logger.info("[大盤] 开始搜索市场新闻...")
             
             # 根据 region 设置搜索上下文名称，避免美股搜索被解读为 A 股语境
             market_names = {"cn": "大盘", "us": "US market", "hk": "HK market", "tw": "Taiwan stock market" }
@@ -549,12 +549,12 @@ Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-
                 )
                 if response and response.results:
                     all_news.extend(response.results)
-                    logger.info(f"[大盘] 搜索 '{query}' 获取 {len(response.results)} 条结果")
+                    logger.info(f"[大盤] 搜索 '{query}' 获取 {len(response.results)} 条结果")
             
-            logger.info(f"[大盘] 共获取 {len(all_news)} 条市场新闻")
+            logger.info(f"[大盤] 共获取 {len(all_news)} 条市场新闻")
             
         except Exception as e:
-            logger.error(f"[大盘] 搜索市场新闻失败: {e}")
+            logger.error(f"[大盤] 搜索市场新闻失败: {e}")
         
         return all_news
     
@@ -562,30 +562,30 @@ Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-
         """
         使用大模型生成大盘复盘报告
         
-        Args:
+        Args:            news: 市场新闻列表 (SearchResult 对象列表)
+
             overview: 市场概览数据
-            news: 市场新闻列表 (SearchResult 对象列表)
             
         Returns:
             大盘复盘报告文本
         """
         if not self.analyzer or not self.analyzer.is_available():
-            logger.warning("[大盘] AI分析器未配置或不可用，使用模板生成报告")
+            logger.warning("[大盤] AI分析器未配置或不可用，使用模板生成报告")
             return self._generate_template_review(overview, news)
         
         # 构建 Prompt
         prompt = self._build_review_prompt(overview, news)
         
-        logger.info("[大盘] 调用大模型生成复盘报告...")
+        logger.info("[大盤] 调用大模型生成复盘报告...")
         # Use the public generate_text() entry point — never access private analyzer attributes.
         review = self.analyzer.generate_text(prompt, max_tokens=8192, temperature=0.7)
 
         if review:
-            logger.info("[大盘] 复盘报告生成成功，长度: %d 字符", len(review))
+            logger.info("[大盤] 复盘报告生成成功，长度: %d 字符", len(review))
             # Inject structured data tables into LLM prose sections
             return self._inject_data_into_review(review, overview, news)
         else:
-            logger.warning("[大盘] 大模型返回为空，使用模板报告")
+            logger.warning("[大盤] 大模型返回为空，使用模板报告")
             return self._generate_template_review(overview, news)
     
     def _inject_data_into_review(

@@ -162,6 +162,50 @@ HK_BLUEPRINT = MarketStrategyBlueprint(
     ],
 )
 
+TW_BLUEPRINT = MarketStrategyBlueprint(
+    region="tw",
+    title="台股市场三段式复盘策略",
+    positioning="聚焦加权指数趋势、外资动向与族群轮动，形成次日交易计划。",
+    principles=[
+        "先看加权指数与主要族群方向，再看外资资金流向，最后看板块持续性。",
+        "结论必须映射到仓位管理、风险控制与交易节奏。",
+        "判断使用当日数据与近3日新闻，不臆测未验证信息。",
+    ],
+    dimensions=[
+        StrategyDimension(
+            name="趋势结构",
+            objective="判断市场处于上升、震荡还是防守阶段。",
+            checkpoints=[
+                "加权指数与主要族群是否同向",
+                "放量上涨或缩量下跌是否成立",
+                "关键支撑阻力是否被突破",
+            ],
+        ),
+        StrategyDimension(
+            name="资金动向",
+            objective="识别外资风险偏好与情绪温度。",
+            checkpoints=[
+                "外资净流入/流出方向与规模",
+                "美元/台币与政策面的关联",
+                "市场广度与龙头集中度",
+            ],
+        ),
+        StrategyDimension(
+            name="主线族群",
+            objective="提炼可交易主线与规避方向。",
+            checkpoints=[
+                "半导体/电子族群趋势持续性",
+                "金融/出口链对政策与汇率的敏感度",
+                "防御与周期性族群的轮动",
+            ],
+        ),
+    ],
+    action_framework=[
+        "进攻：指数突破 + 外资持续流入 + 主线强化。",
+        "均衡：指数分化或缩量震荡，控制仓位并等待确认。",
+        "防守：领导族群走弱 + 外资流出，优先风控与减仓。",
+    ],
+)
 
 def get_market_strategy_blueprint(region: str) -> MarketStrategyBlueprint:
     """Return strategy blueprint by market region."""
@@ -169,4 +213,6 @@ def get_market_strategy_blueprint(region: str) -> MarketStrategyBlueprint:
         return US_BLUEPRINT
     if region == "hk":
         return HK_BLUEPRINT
+    if region == "tw":
+        return TW_BLUEPRINT
     return CN_BLUEPRINT
