@@ -183,6 +183,13 @@ class ComputeEffectiveRegionTestCase(unittest.TestCase):
         result = trading_calendar.compute_effective_region("both", {"cn", "hk"})
         self.assertEqual(result, "cn,hk")
 
+    def test_both_all_open_returns_comma_joined_four(self):
+        result = trading_calendar.compute_effective_region("both", {"cn", "hk", "us", "tw"})
+        self.assertEqual(result, "cn,hk,us,tw")
+
+    def test_single_tw_region_open(self):
+        self.assertEqual(trading_calendar.compute_effective_region("tw", {"cn", "hk", "us", "tw"}), "tw")
+
     def test_both_single_market_open_returns_single(self):
         result = trading_calendar.compute_effective_region("both", {"us"})
         self.assertEqual(result, "us")

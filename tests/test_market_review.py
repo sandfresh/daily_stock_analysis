@@ -161,6 +161,31 @@ class MarketReviewLocalizationTestCase(unittest.TestCase):
         self.assertNotIn("美股", result)
         self.assertNotIn("US Market", result)
 
+    def test_run_market_review_comma_joined_subset_cn_tw(self) -> None:
+        notifier = self._make_notifier()
+        cn_analyzer = MagicMock()
+        cn_analyzer.run_daily_review.return_value = "CN body"
+        tw_analyzer = MagicMock()
+        tw_analyzer.run_daily_review.return_value = "TW body"
+
+        with patch.object(
+            market_review_module,
+            "get_config",
+            return_value=SimpleNamespace(report_language="zh", market_review_region="cn"),
+        ), patch.object(
+            market_review_module,
+            "MarketAnalyzer",
+            side_effect=[cn_analyzer, tw_analyzer],
+        ), patch.object(market_review_module, "_persist_market_review_history"):
+            result = run_market_review(
+                notifier, send_notification=False, override_region="cn,tw"
+            )
+
+        self.assertIn("# A股大盘复盘\n\nCN body", result)
+        self.assertIn("# 台股大盘复盘\n\nTW body", result)
+        self.assertNotIn("港股", result)
+        self.assertNotIn("HK Market", result)
+
     def test_persist_market_review_history_saves_markdown_report(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             old_db_path = os.environ.get("DATABASE_PATH")

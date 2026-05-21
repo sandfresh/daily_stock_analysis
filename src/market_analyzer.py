@@ -123,7 +123,7 @@ class MarketAnalyzer:
         self.search_service = search_service
         self.analyzer = analyzer
         self.data_manager = DataFetcherManager()
-        self.region = region if region in ("cn", "us", "hk") else "cn"
+        self.region = region if region in ("cn", "us", "hk", "tw") else "cn"
         self.profile: MarketProfile = get_profile(self.region)
         self.strategy = get_market_strategy_blueprint(self.region)
 
@@ -146,6 +146,8 @@ class MarketAnalyzer:
             return "US market"
         if self.region == "hk":
             return "Hong Kong market" if review_language == "en" else "港股市场"
+        if self.region == "tw":
+           return "Taiwan market" if review_language == "en" else "台灣股市"
         if review_language == "en":
             return "A-share market"
         return "A股市场"
@@ -156,6 +158,8 @@ class MarketAnalyzer:
             return "USD bn" if self._get_review_language() == "en" else "十亿美元"
         if self.region == "hk":
             return "HKD bn" if self._get_review_language() == "en" else "十亿港元"
+        if self.region == "tw":
+           return "TWD bn" if self._get_review_language() == "en" else "十亿台幣"
         return "CNY 100m" if self._get_review_language() == "en" else "亿"
 
     def _format_turnover_value(self, amount_raw: float) -> str:
@@ -178,9 +182,15 @@ class MarketAnalyzer:
 
     def _get_review_title(self, date: str) -> str:
         if self._get_review_language() == "en":
-            market_names = {"us": "US Market Recap", "hk": "HK Market Recap"}
+            market_names = {
+                "us": "US Market Recap",
+                "hk": "HK Market Recap",
+                "tw": "Taiwan Market Recap",
+            }
             market_name = market_names.get(self.region, "A-share Market Recap")
             return f"## {date} {market_name}"
+        if self.region == "tw":
+            return f"## {date} 台股大盘复盘"
         return f"## {date} 大盘复盘"
 
     def _get_index_hint(self) -> str:
@@ -220,6 +230,29 @@ Focus on HSI trend, southbound flow dynamics, and sector rotation to define next
 - Risk-on: broad index breakout with expanding southbound participation.
 - Neutral: mixed index signals; focus on selective relative strength.
 - Risk-off: failed breakouts and rising volatility; prioritize capital preservation."""
+        if self.region == "tw" and self._get_review_language() == "en":
+            return """## Strategy Blueprint: Taiwan Market Regime Strategy
+Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-session risk posture.
+
+### Strategy Principles
+- Read market regime from TAIEX and sector alignment first.
+- Track foreign capital flow as a key sentiment driver.
+- Translate recap into actionable risk-on/risk-off stance with clear invalidation points.
+
+### Analysis Dimensions
+- Trend Regime: Classify the market as momentum, range, or risk-off.
+  - Is TAIEX directionally aligned with sector leaders
+  - Did volume confirm the move
+  - Are key index levels reclaimed or lost
+- Capital Flows: Map foreign flow and macro narrative into equity risk appetite.
+  - Foreign net inflow direction and magnitude
+  - USD/TWD and Taiwan policy implications
+  - Breadth and leadership concentration
+- Sector Themes: Identify persistent leaders and vulnerable laggards.
+  - Semiconductor and technology sector persistence
+  - Finance and insurance sensitivity to policy shifts
+  - Defensive vs growth factor rotation"""
+         
         if not (self.region == "cn" and self._get_review_language() == "en"):
             return self.strategy.to_prompt_block()
         return """## Strategy Blueprint: A-share Three-Phase Recap Strategy
@@ -430,7 +463,7 @@ Focus on index trend, liquidity, and sector rotation to shape the next-session t
             logger.info("[大盘] 开始搜索市场新闻...")
             
             # 根据 region 设置搜索上下文名称，避免美股搜索被解读为 A 股语境
-            market_names = {"cn": "大盘", "us": "US market", "hk": "HK market"}
+            market_names = {"cn": "大盘", "us": "US market", "hk": "HK market", "tw": "Taiwan stock market" }
             market_name = market_names.get(self.region, "大盘")
             for query in search_queries:
                 response = self.search_service.search_stock_news(

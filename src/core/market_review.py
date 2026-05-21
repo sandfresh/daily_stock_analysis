@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 ===================================
-股票智能分析系统 - 大盘复盘模块（支持 A 股 / 港股 / 美股）
+股票智能分析系统 - 大盘复盘模块（支持 A 股 / 港股 / 美股 / 台股）
 ===================================
 
 职责：
-1. 根据 MARKET_REVIEW_REGION 配置选择市场区域（cn / hk / us / both）
+1. 根据 MARKET_REVIEW_REGION 配置选择市场区域（cn / hk / us / tw / both）
 2. 执行大盘复盘分析并生成复盘报告
 3. 保存和发送复盘报告
 """
@@ -38,6 +38,7 @@ def _get_market_review_text(language: str) -> dict[str, str]:
             "cn_title": "# A-share Market Recap",
             "us_title": "# US Market Recap",
             "hk_title": "# HK Market Recap",
+            "tw_title": "# Taiwan Market Recap",
             "separator": "> Next market recap follows",
         }
     return {
@@ -46,6 +47,7 @@ def _get_market_review_text(language: str) -> dict[str, str]:
         "cn_title": "# A股大盘复盘",
         "us_title": "# 美股大盘复盘",
         "hk_title": "# 港股大盘复盘",
+        "tw_title": "# 台股大盘复盘",
         "separator": "> 以下为下一市场大盘复盘",
     }
 
@@ -82,15 +84,21 @@ def run_market_review(
         if override_region is not None
         else (getattr(config, 'market_review_region', 'cn') or 'cn')
     )
-    _ALL_MARKETS = [('cn', 'cn_title', 'A 股'), ('hk', 'hk_title', '港股'), ('us', 'us_title', '美股')]
-    _VALID_SINGLES = {'cn', 'us', 'hk'}
+    _ALL_MARKETS = [
+        ('cn', 'cn_title', 'A 股'),
+        ('hk', 'hk_title', '港股'),
+        ('us', 'us_title', '美股'),
+        ('tw', 'tw_title', '台股'),
+    ]
+    _VALID_SINGLES = {'cn', 'us', 'hk', 'tw'}
+    _BOTH_MARKETS = ['cn', 'hk', 'us']
 
     # Determine which markets to run.
-    # region can be: 'cn', 'hk', 'us', 'both', or a comma-joined subset like 'cn,us'.
+    # region can be: 'cn', 'hk', 'us', 'tw', 'both', or a comma-joined subset like 'cn,us'.
     if ',' in region:
         run_markets = [m.strip() for m in region.split(',') if m.strip() in _VALID_SINGLES]
     elif region == 'both':
-        run_markets = list(_VALID_SINGLES)
+        run_markets = _BOTH_MARKETS
     elif region in _VALID_SINGLES:
         run_markets = [region]
     else:
