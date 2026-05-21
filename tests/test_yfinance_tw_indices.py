@@ -105,5 +105,43 @@ class TestGetTwMainIndices(unittest.TestCase):
         self.assertIsNone(result)
 
 
+class TestMarketAnalyzerTw(unittest.TestCase):
+    """MarketAnalyzer 台股区域文本提示测试"""
+
+    def test_get_index_hint_returns_tw_hint_for_english(self):
+        from src.market_analyzer import MarketAnalyzer
+
+        analyzer = MarketAnalyzer(region='tw')
+        with patch.object(analyzer, '_get_review_language', return_value='en'):
+            hint = analyzer._get_index_hint()
+
+        self.assertEqual(
+            hint,
+            'Analyze the key moves in the TAIEX, TWOTC, and other major Taiwan market indices.',
+        )
+
+    def test_build_review_prompt_contains_tw_analyst_role_in_chinese(self):
+        from src.market_analyzer import MarketAnalyzer, MarketOverview
+
+        analyzer = MarketAnalyzer(region='tw')
+        overview = MarketOverview(date='2026-05-21')
+
+        with patch.object(analyzer, '_get_review_language', return_value='zh'):
+            prompt = analyzer._build_review_prompt(overview, [])
+
+        self.assertIn('你是一位专业的台股市场分析师', prompt)
+        self.assertIn('台灣股市大盘复盘报告', prompt)
+
+    def test_get_strategy_prompt_block_returns_tw_chinese_blueprint(self):
+        from src.market_analyzer import MarketAnalyzer
+
+        analyzer = MarketAnalyzer(region='tw')
+        with patch.object(analyzer, '_get_review_language', return_value='zh'):
+            strategy_block = analyzer._get_strategy_prompt_block()
+
+        self.assertIn('## 策略蓝图：台股市场态势策略', strategy_block)
+        self.assertIn('加权指数', strategy_block)
+
+
 if __name__ == '__main__':
     unittest.main()

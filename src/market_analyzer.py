@@ -162,6 +162,30 @@ class MarketAnalyzer:
            return "TWD bn" if self._get_review_language() == "en" else "十亿台幣"
         return "CNY 100m" if self._get_review_language() == "en" else "亿"
 
+    def _get_analyst_role(self) -> str:
+        """Return the analyst role description for prompt generation."""
+        if self._get_review_language() == "en":
+            roles = {
+                "cn": "A-share market analyst",
+                "us": "US market analyst",
+                "hk": "Hong Kong market analyst",
+                "tw": "Taiwan market analyst",
+            }
+            return roles.get(self.region, "A-share market analyst")
+        roles = {
+            "cn": "A股市场分析师",
+            "us": "美股市场分析师",
+            "hk": "港股市场分析师",
+            "tw": "台股市场分析师",
+        }
+        return roles.get(self.region, "A股市场分析师")
+
+    def _get_market_turnover_label(self) -> str:
+        """Return the Chinese turnover label appropriate for the current market."""
+        if self.region == "cn":
+            return "两市成交额"
+        return "成交额"
+
     def _format_turnover_value(self, amount_raw: float) -> str:
         """Format raw turnover according to market-specific units."""
         if amount_raw == 0.0:
@@ -199,12 +223,15 @@ class MarketAnalyzer:
                 return "Analyze the key moves in the S&P 500, Nasdaq, Dow, and other major indices."
             if self.region == "hk":
                 return "Analyze the key moves in the HSI, Hang Seng Tech, HSCEI, and other major indices."
+            if self.region == "tw":
+                return "Analyze the key moves in the TAIEX, TWOTC, and other major Taiwan market indices."
             return "Analyze the price action in the SSE, SZSE, ChiNext, and other major indices."
         return self.profile.prompt_index_hint
 
     def _get_strategy_prompt_block(self) -> str:
-        if self.region == "hk" and self._get_review_language() == "en":
-            return """## Strategy Blueprint: Hong Kong Market Regime Strategy
+        if self._get_review_language() == "en":
+            if self.region == "hk":
+                return """## Strategy Blueprint: Hong Kong Market Regime Strategy
 Focus on HSI trend, southbound flow dynamics, and sector rotation to define next-session risk posture.
 
 ### Strategy Principles
@@ -230,8 +257,8 @@ Focus on HSI trend, southbound flow dynamics, and sector rotation to define next
 - Risk-on: broad index breakout with expanding southbound participation.
 - Neutral: mixed index signals; focus on selective relative strength.
 - Risk-off: failed breakouts and rising volatility; prioritize capital preservation."""
-        if self.region == "tw" and self._get_review_language() == "en":
-            return """## Strategy Blueprint: Taiwan Market Regime Strategy
+            if self.region == "tw":
+                return """## Strategy Blueprint: Taiwan Market Regime Strategy
 Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-session risk posture.
 
 ### Strategy Principles
@@ -251,52 +278,100 @@ Focus on TAIEX trend, foreign flow dynamics, and sector rotation to define next-
 - Sector Themes: Identify persistent leaders and vulnerable laggards.
   - Semiconductor and technology sector persistence
   - Finance and insurance sensitivity to policy shifts
-  - Defensive vs growth factor rotation"""
-         
-        if not (self.region == "cn" and self._get_review_language() == "en"):
-            return self.strategy.to_prompt_block()
-        return """## Strategy Blueprint: A-share Three-Phase Recap Strategy
-Focus on index trend, liquidity, and sector rotation to shape the next-session trading plan.
-
-### Strategy Principles
-- Read index direction first, then confirm liquidity structure, and finally test sector persistence.
-- Every conclusion must map to position sizing, trading pace, and risk-control actions.
-- Base judgments on today's data and the latest 3-day news flow without inventing unverified information.
-
-### Analysis Dimensions
-- Trend Structure: Determine whether the market is in an uptrend, range, or defensive phase.
-  - Are the SSE, SZSE, and ChiNext moving in the same direction
-  - Is the market advancing on expanding volume or slipping on contracting volume
-  - Have key support or resistance levels been reclaimed or broken
-- Liquidity & Sentiment: Identify near-term risk appetite and market temperature.
-  - Advance/decline breadth and limit-up/limit-down structure
-  - Whether turnover is expanding or fading
-  - Whether high-beta leaders are showing divergence
-- Leading Themes: Distill tradable leadership and areas to avoid.
-  - Whether leading sectors have clear event catalysts
-  - Whether sector leaders are pulling the group higher
-  - Whether weakness is broadening across lagging sectors
+  - Defensive vs growth factor rotation
 
 ### Action Framework
-- Offensive: indices rise in sync, turnover expands, and core themes strengthen.
-- Balanced: index divergence or low-volume consolidation; keep sizing controlled and wait for confirmation.
-- Defensive: indices weaken and laggards broaden; prioritize risk control and de-risking."""
+- Risk-on: broad index breakout with expanding foreign flow participation.
+- Neutral: mixed index signals; focus on selective relative strength.
+- Risk-off: weak leadership and falling turnover; prioritize risk control."""
+            if self.region == "us":
+                return self.strategy.to_prompt_block()
+            return self.strategy.to_prompt_block()
+        if self.region == "hk":
+            return """## 策略蓝图：港股市场态势策略
+聚焦恒生指数趋势、南向资金流向和行业轮动，形成清晰的下一交易日风险判断。
+
+### 策略原则
+- 先读取恒生指数、恒生科技和国企指数之间的协同性。
+- 关注南向资金流向作为市场情绪主线。
+- 结论要落地到风险偏好、换手和仓位调整。
+
+### 分析维度
+- 趋势态势：判断市场属于动量、震荡还是防御阶段。
+  - 恒生指数与恒生科技是否同步
+  - 交易量是否确认行情
+  - 关键价位是否被守住或突破
+- 资金流向：将南向资金和宏观变化映射到风险偏好。
+  - 资金净流入/流出方向与强度
+  - 港元、美元与内地政策的关联
+  - 市场内部广度与领导集中度
+- 主题轮动：识别持续强势板块和潜在回落行业。
+  - 科技与互联网平台的趋势持续性
+  - 金融与地产对政策变动的敏感性
+  - 防御与成长因子的轮动
+
+### 行动框架
+- 风险偏好增强：指数突破且南向资金加速流入。
+- 中性：指数分化或成交量低迷；保持仓位谨慎。
+- 防御：突破失败或波动加剧；优先控制风险。"""
+        if self.region == "tw":
+            return """## 策略蓝图：台股市场态势策略
+聚焦加权指数趋势、外资动向和族群轮动，形成明确的下一交易日风险判断。
+
+### 策略原则
+- 先读取加权指数和权值族群之间的协同性。
+- 关注外资资金流向作为市场情绪核心。
+- 结论要落地到仓位管理、风控点和交易节奏。
+
+### 分析维度
+- 趋势态势：判断市场属于动量、震荡还是防御阶段。
+  - 加权指数与主要族群是否同步
+  - 交易量是否确认行情
+  - 关键价位是否被守住或突破
+- 资金流向：将外资流向和宏观变动映射到风险偏好。
+  - 外资净流入/流出方向与幅度
+  - 美元/台币与政策面的关联
+  - 市场内部广度与领导集中度
+- 主题轮动：识别持续强势族群和潜在回落行业。
+  - 半导体与电子族群的趋势持续性
+  - 金融与出口链对政策与汇率的敏感性
+  - 防御与周期性族群的轮动
+
+### 行动框架
+- 风险偏好增强：指数突破且外资流入扩大。
+- 中性：指数分化或成交量低迷；保持仓位谨慎。
+- 防御：领导族群走弱或资金离场；优先控制风险。"""
+        return self.strategy.to_prompt_block()
 
     def _get_strategy_markdown_block(self, review_language: str | None = None) -> str:
         review_language = review_language or self._get_review_language()
-        if self.region == "hk" and review_language == "en":
-            return """### 6. Strategy Framework
+        if review_language == "en":
+            if self.region == "hk":
+                return """### 6. Strategy Framework
 - **Trend Regime**: Classify the market as momentum, range, or risk-off based on HSI/HSTECH/HSCEI alignment.
 - **Capital Flows**: Track southbound flow direction and macro narrative for risk appetite signals.
 - **Sector Themes**: Focus on tech/internet platform persistence and financials/property policy sensitivity.
 """
-        if not (self.region == "cn" and review_language == "en"):
-            return self.strategy.to_markdown_block()
-        return """### 6. Strategy Framework
-- **Trend Structure**: Determine whether the market is in an uptrend, range, or defensive phase.
-- **Liquidity & Sentiment**: Track breadth, turnover expansion, and whether leaders are diverging.
-- **Leading Themes**: Focus on sectors with catalysts and sustained leadership while avoiding broadening weakness.
+            if self.region == "tw":
+                return """### 6. Strategy Framework
+- **Trend Regime**: Classify the market as momentum, range, or risk-off based on TAIEX and sector alignment.
+- **Capital Flows**: Track foreign flow direction and macro narrative for risk appetite signals.
+- **Sector Themes**: Focus on semiconductor/electronics persistence and export-linked sector sensitivity.
 """
+            return self.strategy.to_markdown_block()
+        if self.region == "hk":
+            return """### 6. 策略框架
+- **趋势态势**：根据恒生指数与恒生科技的同步性判断市场阶段。
+- **资金流向**：关注南向资金方向与宏观信息对风险偏好的提示。
+- **主题轮动**：聚焦科技、金融、地产等敏感族群的持续性。
+"""
+        if self.region == "tw":
+            return """### 6. 策略框架
+- **趋势态势**：根据加权指数与主要族群的同步性判断市场阶段。
+- **资金流向**：关注外资方向与汇率/政策对风险偏好的提示。
+- **主题轮动**：聚焦半导体、电子与金融等出口链敏感族群。
+"""
+        return self.strategy.to_markdown_block()
 
     def _get_market_mood_text(self, mood_key: str, review_language: str | None = None) -> str:
         review_language = review_language or self._get_review_language()
@@ -945,7 +1020,7 @@ Lagging: {bottom_sectors_text if bottom_sectors_text else "N/A"}"""
                 stats_block = f"""## 市场概况
 - 上涨: {overview.up_count} 家 | 下跌: {overview.down_count} 家 | 平盘: {overview.flat_count} 家
 - 涨停: {overview.limit_up_count} 家 | 跌停: {overview.limit_down_count} 家
-- 两市成交额: {overview.total_amount:.0f} 亿元"""
+- {self._get_market_turnover_label()}: {overview.total_amount:.0f} 亿元"""
             else:
                 stats_block = "## 市场概况\n（该市场暂无涨跌家数等统计）"
 
@@ -975,7 +1050,7 @@ Lagging: {bottom_sectors_text if bottom_sectors_text else "N/A"}"""
 
         if review_language == "en":
             report_title = self._get_review_title(overview.date).removeprefix("## ").strip()
-            return f"""You are a professional US/A/H market analyst. Please produce a concise market recap report based on the data below.
+            return f"""You are a professional {self._get_analyst_role()}. Please produce a concise market recap report based on the data below.
 
 [Requirements]
 - Output pure Markdown only
@@ -1037,8 +1112,8 @@ Lagging: {bottom_sectors_text if bottom_sectors_text else "N/A"}"""
 Output the report content directly, no extra commentary.
 """
 
-        # A 股场景使用中文提示语
-        return f"""你是一位专业的A/H/美股市场分析师，请根据以下数据生成一份结构化的{self._get_market_scope_name('zh')}大盘复盘报告。
+        # 中文场景使用区域特定提示语
+        return f"""你是一位专业的{self._get_analyst_role()}，请根据以下数据生成一份结构化的{self._get_market_scope_name('zh')}大盘复盘报告。
 
 【重要】输出要求：
 - 必须输出纯 Markdown 文本格式
@@ -1182,7 +1257,7 @@ Market conditions can change quickly. The data above is for reference only and d
 """
             return report
 
-        market_labels = {"cn": "A股", "us": "美股", "hk": "港股"}
+        market_labels = {"cn": "A股", "us": "美股", "hk": "港股", "tw": "台股"}
         market_label = market_labels.get(self.region, "A股")
         dashboard_block = self._build_stats_block(overview)
         indices_block = self._build_indices_block(overview)
